@@ -7,12 +7,21 @@ using System.IO;
 public class GameControllerScript : MonoBehaviour {
 
 	private static int numJugadoresLocales = 2;
+	private static int numCeldasX=20,numCeldasY=30;
 	private int golesL=0;
 	private int golesV=0;
+	public Vector2 comienzoTablero = new Vector2 (+10,+10);
+
+
+
 	public static GameControllerScript Instance;
 	private GameObject pSeleccionado;
 
 
+	//Celdas
+
+	private GameObject[,] celdas = new GameObject[numCeldasY,numCeldasX];
+	public Transform celda;
 
 	//Bola
 	public GameObject bola;
@@ -37,28 +46,18 @@ public class GameControllerScript : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-		//Leer de fichero las estadisticas de los jugadores
-		StreamReader sr = new StreamReader(Application.dataPath+"/Resources/players.txt");
-		string fileContents = sr.ReadToEnd();
-		sr.Close();
 
-		string[] lines = fileContents.Split ("\n"[0]);
+		inicializarTablero ();
 
-		//Crear jugadores 
-		for(int i = 0; i<2;i++) {
-
-			string[] parametros =lines[i].Split(","[0]);
-
-			inicializarJugador(locales[i],parametros);
-		}
+		leerFicheroJugadores ();
 
 
 		//Crear la bola
 		bola = (GameObject)Instantiate (Resources.Load ("Bola"), Vector3.zero, Quaternion.identity);
 
-		bola.transform.position = new Vector2 (bola.transform.position.x, bola.transform.position.y + 2);
+		bola.GetComponent<BolaScript> ().setNumCelda(new Vector2(8,8));
 
-
+		bola.transform.position = celdas [8, 8].transform.position;
 
 	}
 	
@@ -71,15 +70,114 @@ public class GameControllerScript : MonoBehaviour {
 
 	}
 
+	private void inicializarTablero(){
 
-	private void inicializarJugador(GameObject p, string[] par){
+		/*Inicializacion de tablero*/
+		
+		float tamCelda = (celda.GetComponent<BoxCollider2D> ().size.x)/2;
+		
+		
+		float posY = comienzoTablero.y;
+		
+		for (int i=0; i<numCeldasY; i++) {
+			float posX = comienzoTablero.x;
+			for(int j=0; j<numCeldasX;j++){
+				
+				celdas[i,j] = (GameObject)Instantiate (Resources.Load ("Celda"), Vector3.zero, Quaternion.identity);		
+				celdas[i,j].transform.position = new Vector3 (posX, posY,0.5f);
+				celdas[i,j].GetComponent<CeldaScript>().setNumCelda(new Vector2(i,j));
+				posX+=tamCelda;
+				
+			}
+			posY+=tamCelda;
+			
+		}
+
+
+	}
+
+
+	private void leerFicheroJugadores(){
+
+		
+		//Leer de fichero las estadisticas de los jugadores
+		StreamReader sr = new StreamReader(Application.dataPath+"/Resources/players.txt");
+		string fileContents = sr.ReadToEnd();
+		sr.Close();
+		
+		string[] lines = fileContents.Split ("\n"[0]);
+		
+		//Crear jugadores 
+		for(int i = 0; i<2;i++) {
+			
+			string[] parametros =lines[i].Split(","[0]);
+			
+			inicializarJugador(locales[i],parametros,new Vector2 (Random.Range(2,10),Random.Range(2,10)));
+		}
+	}
+
+
+	private void inicializarJugador(GameObject p, string[] par,Vector2 numCelda){
 
 		p = (GameObject)Instantiate (Resources.Load ("Player"), Vector3.zero, Quaternion.identity);
 		p.GetComponent<PlayerScript> ().setParametros (par[0],int.Parse(par[1]), int.Parse(par[2]), int.Parse(par[3]), 
 		                                               int.Parse(par[4]), int.Parse(par[5]),int.Parse(par[6]), int.Parse(par[7])
 		                                               , int.Parse(par[8]), int.Parse(par[9]),int.Parse(par[10]));
-		p.transform.position = new Vector2 (p.transform.position.x + int.Parse(par[11]), p.transform.position.y);
 
+		p.GetComponent<PlayerScript> ().setNumCelda(numCelda);
+		p.transform.position = celdas [(int)numCelda.x, (int)numCelda.y].transform.position;
+
+	}
+
+
+	public void encenderCasillasAdy(Vector2 pos, int lPase){
+
+		int inicioX = (int)pos.x - lPase;
+		int finalX = (int)pos.x + lPase;
+		int inicioY = (int)pos.y - lPase;
+		int finalY = (int)pos.y + lPase;
+
+
+		for (int i = inicioX; i<=finalX && i<numCeldasY; i++) {
+
+				if(i>=0){
+					for (int j= inicioY; j<=finalY && j<numCeldasX; j++) {
+							if(j>=0){
+								if(i==inicioX || i==finalX || j== inicioY || j== finalY){
+									celdas [i, j].GetComponent<CeldaScript> ().encenderRojo ();
+								}else {
+									celdas [i, j].GetComponent<CeldaScript> ().encenderAmarillo ();
+								}
+							}
+					}
+				}
+		}
+
+	
+	}
+
+
+	public void apagarCasillasAdy(Vector2 pos, int lPase){
+		int inicioX = (int)pos.x - lPase;
+		int finalX = (int)pos.x + lPase;
+		int inicioY = (int)pos.y - lPase;
+		int finalY = (int)pos.y + lPase;
+		
+		
+		for (int i = inicioX; i<=finalX && i<numCeldasY; i++) {
+			
+			if(i>=0){
+				for (int j= inicioY; j<=finalY && j<numCeldasX; j++) {
+					if(j>=0){
+
+						celdas [i, j].GetComponent<CeldaScript> ().apagar ();
+						
+					}
+				}
+			}
+		}
+
+	
 	}
 
 
