@@ -130,7 +130,10 @@ public class GameControllerScript : MonoBehaviour {
 	}
 
 
-	public void encenderCasillasAdy(Vector2 pos, int lPase){
+	public void encenderCasillasAdy(){
+
+		Vector2 pos = pSeleccionado.GetComponent<PlayerScript>().getNumCelda();
+		int lPase = pSeleccionado.GetComponent<PlayerScript>().getPase();
 
 		int inicioX = (int)pos.x - lPase;
 		int finalX = (int)pos.x + lPase;
@@ -157,12 +160,16 @@ public class GameControllerScript : MonoBehaviour {
 	}
 
 
-	public void apagarCasillasAdy(Vector2 pos, int lPase){
+	public void apagarCasillasAdy(){
+
+		Vector2 pos = pSeleccionado.GetComponent<PlayerScript> ().getNumCelda ();
+		int lPase = pSeleccionado.GetComponent<PlayerScript> ().getPase ();
+	
 		int inicioX = (int)pos.x - lPase;
 		int finalX = (int)pos.x + lPase;
 		int inicioY = (int)pos.y - lPase;
 		int finalY = (int)pos.y + lPase;
-		
+
 		
 		for (int i = inicioX; i<=finalX && i<numCeldasY; i++) {
 			
@@ -176,6 +183,8 @@ public class GameControllerScript : MonoBehaviour {
 				}
 			}
 		}
+
+		
 
 	
 	}
@@ -202,7 +211,10 @@ public class GameControllerScript : MonoBehaviour {
 	//Jugador seleccionado para mostrar sus estadisticas en pantalla
 	public void seleccionarJugador(GameObject player){
 
+		if(pSeleccionado!=null)
+			apagarCasillasAdy ();
 		pSeleccionado = player;
+		encenderCasillasAdy ();
 
 	}
 

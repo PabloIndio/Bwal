@@ -7,7 +7,6 @@ public class PlayerScript : MonoBehaviour {
 	public static float velDesplazamiento = 20.0f;
 	private bool tieneLaBola=false;
 	private Vector2 numCelda;
-	private bool seleccionado = false;
 	
 
 
@@ -110,15 +109,9 @@ public class PlayerScript : MonoBehaviour {
 	void OnMouseDown(){
 
 
-		seleccionado=!seleccionado;
-		if (seleccionado) {
+	
 				GameControllerScript.Instance.seleccionarJugador (this.gameObject);
-				GameControllerScript.Instance.encenderCasillasAdy (numCelda, lpase);
-		}
-		else{
-			GameControllerScript.Instance.seleccionarJugador (null);
-			GameControllerScript.Instance.apagarCasillasAdy (numCelda,lpase);
-		}
+
 	}
 	
 
