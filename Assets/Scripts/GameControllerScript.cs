@@ -7,21 +7,13 @@ using System.IO;
 public class GameControllerScript : MonoBehaviour {
 
 	private static int numJugadoresLocales = 2;
-	private static int numCeldasX=20,numCeldasY=30;
 	private int golesL=0;
 	private int golesV=0;
-	public Vector2 comienzoTablero = new Vector2 (+10,+10);
 
 
 
 	public static GameControllerScript Instance;
 	private GameObject pSeleccionado;
-
-
-	//Celdas
-
-	private GameObject[,] celdas = new GameObject[numCeldasY,numCeldasX];
-	public Transform celda;
 
 	//Bola
 	public GameObject bola;
@@ -46,19 +38,11 @@ public class GameControllerScript : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-
-		inicializarTablero ();
+		TableroScript.Instance.inicializarTablero ();
 
 		leerFicheroJugadores ();
 
-
-		//Crear la bola
-		bola = (GameObject)Instantiate (Resources.Load ("Bola"), Vector3.zero, Quaternion.identity);
-
-		bola.GetComponent<BolaScript> ().setNumCelda(new Vector2(8,8));
-
-		bola.transform.position = celdas [8, 8].transform.position;
-
+		inicializarBola ();
 	}
 	
 	// Update is called once per frame
@@ -66,36 +50,22 @@ public class GameControllerScript : MonoBehaviour {
 	
 		/*if(Input.GetButtonDown("Fire1"))
 			bola.GetComponent<BolaScript>().desplazar((Camera.main.ScreenToWorldPoint(Input.mousePosition)));*/
-
-
-	}
-
-	private void inicializarTablero(){
-
-		/*Inicializacion de tablero*/
-		
-		float tamCelda = (celda.GetComponent<BoxCollider2D> ().size.x)/2;
-		
-		
-		float posY = comienzoTablero.y;
-		
-		for (int i=0; i<numCeldasY; i++) {
-			float posX = comienzoTablero.x;
-			for(int j=0; j<numCeldasX;j++){
-				
-				celdas[i,j] = (GameObject)Instantiate (Resources.Load ("Celda"), Vector3.zero, Quaternion.identity);		
-				celdas[i,j].transform.position = new Vector3 (posX, posY,0.5f);
-				celdas[i,j].GetComponent<CeldaScript>().setNumCelda(new Vector2(i,j));
-				posX+=tamCelda;
-				
-			}
-			posY+=tamCelda;
-			
-		}
-
+	
 
 	}
 
+
+	private void inicializarBola(){
+
+		//Crear la bola
+		bola = (GameObject)Instantiate (Resources.Load ("Bola"), Vector3.zero, Quaternion.identity);
+		
+		bola.GetComponent<BolaScript> ().setNumCelda(new Vector2(8,8));
+		
+		bola.transform.position = TableroScript.Instance.getPosCelda(new Vector2 (8,8));
+		bola.transform.position = new Vector3 (bola.transform.position.x, bola.transform.position.y, -0.5f);
+
+	}
 
 	private void leerFicheroJugadores(){
 
@@ -125,70 +95,10 @@ public class GameControllerScript : MonoBehaviour {
 		                                               , int.Parse(par[8]), int.Parse(par[9]),int.Parse(par[10]));
 
 		p.GetComponent<PlayerScript> ().setNumCelda(numCelda);
-		p.transform.position = celdas [(int)numCelda.x, (int)numCelda.y].transform.position;
+		p.transform.position =TableroScript.Instance.getPosCelda(numCelda);
 
 	}
-
-
-	public void encenderCasillasAdy(){
-
-		Vector2 pos = pSeleccionado.GetComponent<PlayerScript>().getNumCelda();
-		int lPase = pSeleccionado.GetComponent<PlayerScript>().getPase();
-
-		int inicioX = (int)pos.x - lPase;
-		int finalX = (int)pos.x + lPase;
-		int inicioY = (int)pos.y - lPase;
-		int finalY = (int)pos.y + lPase;
-
-
-		for (int i = inicioX; i<=finalX && i<numCeldasY; i++) {
-
-				if(i>=0){
-					for (int j= inicioY; j<=finalY && j<numCeldasX; j++) {
-							if(j>=0){
-								if(i==inicioX || i==finalX || j== inicioY || j== finalY){
-									celdas [i, j].GetComponent<CeldaScript> ().encenderRojo ();
-								}else {
-									celdas [i, j].GetComponent<CeldaScript> ().encenderAmarillo ();
-								}
-							}
-					}
-				}
-		}
-
 	
-	}
-
-
-	public void apagarCasillasAdy(){
-
-		Vector2 pos = pSeleccionado.GetComponent<PlayerScript> ().getNumCelda ();
-		int lPase = pSeleccionado.GetComponent<PlayerScript> ().getPase ();
-	
-		int inicioX = (int)pos.x - lPase;
-		int finalX = (int)pos.x + lPase;
-		int inicioY = (int)pos.y - lPase;
-		int finalY = (int)pos.y + lPase;
-
-		
-		for (int i = inicioX; i<=finalX && i<numCeldasY; i++) {
-			
-			if(i>=0){
-				for (int j= inicioY; j<=finalY && j<numCeldasX; j++) {
-					if(j>=0){
-
-						celdas [i, j].GetComponent<CeldaScript> ().apagar ();
-						
-					}
-				}
-			}
-		}
-
-		
-
-	
-	}
-
 
 	public int getGolesL(){
 		return golesL;
@@ -211,24 +121,40 @@ public class GameControllerScript : MonoBehaviour {
 	//Jugador seleccionado para mostrar sus estadisticas en pantalla
 	public void seleccionarJugador(GameObject player){
 
-		if(pSeleccionado!=null)
-			apagarCasillasAdy ();
+		if (pSeleccionado != null) {
+						TableroScript.Instance.apagarCasillasAdy (pSeleccionado);
+						pSeleccionado.GetComponent<PlayerScript>().apagarMenu();
+		}
 		pSeleccionado = player;
-		encenderCasillasAdy ();
+		TableroScript.Instance.encenderCasillasAdy (pSeleccionado);
 
 	}
+
+
+
+	public void desplazamiento(Vector2 celda){
+
+		TableroScript.Instance.apagarCasillasAdy (pSeleccionado);
+		pSeleccionado.GetComponent<PlayerScript> ().desplazar (TableroScript.Instance.getPosCelda(celda),celda);
+		pSeleccionado = null;
+	}
+
+
+
+
 
 	void OnGUI(){
 		
 		if (pSeleccionado != null) {
-
+			
 			GUI.Label (new Rect (0, 0, 400, 20), pSeleccionado.GetComponent<PlayerScript>().getNombre()+
 			           "   Vida: "+pSeleccionado.GetComponent<PlayerScript>().getVida().ToString()+"/"+
 			           pSeleccionado.GetComponent<PlayerScript>().getVidaTotal().ToString()+
 			           "   Vel: "+pSeleccionado.GetComponent<PlayerScript>().getVelocidad().ToString());
-		}
-		
-	}
 
+			
+	
+		}
+	}
 
 }

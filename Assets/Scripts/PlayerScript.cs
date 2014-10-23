@@ -7,6 +7,8 @@ public class PlayerScript : MonoBehaviour {
 	public static float velDesplazamiento = 20.0f;
 	private bool tieneLaBola=false;
 	private Vector2 numCelda;
+	private Vector2 screenPosition;
+	private bool encenderMenu;
 	
 
 
@@ -40,10 +42,13 @@ public class PlayerScript : MonoBehaviour {
 		                                          target, 
 		                                          velDesplazamiento * Time.deltaTime);
 
+		screenPosition = Camera.main.WorldToScreenPoint(this.transform.position);
+		screenPosition.y = Screen.height - screenPosition.y;
 	}
 
 	public void desplazar(Vector2 destino, Vector2 celda){
 
+		apagarMenu ();
 		numCelda = celda;
 		target = destino;
 
@@ -66,9 +71,14 @@ public class PlayerScript : MonoBehaviour {
 	}
 
 	public void cogerBola(){
+		Vector2 numCeldaBola =GameControllerScript.Instance.bola.GetComponent<BolaScript> ().getNumCelda ();
 
-		GameControllerScript.Instance.bola.GetComponent<BolaScript> ().desplazar (this.transform.position,numCelda);
-		tieneLaBola = true;
+		//La bola tiene que estar a una distancia de 1 o en la posicion del jugador
+		if (numCeldaBola.x <= numCelda.x+1 && numCeldaBola.y <= numCelda.y+1) {
+				GameControllerScript.Instance.bola.GetComponent<BolaScript> ().setPoseedor (this.gameObject);
+				tieneLaBola = true;
+
+		}
 
 	}
 
@@ -78,9 +88,14 @@ public class PlayerScript : MonoBehaviour {
 		if (tieneLaBola) {
 
 			GameControllerScript.Instance.bola.GetComponent<BolaScript>().desplazar(destino,numCelda);
-
+			tieneLaBola=false;
 		}
 
+
+	}
+
+	public void apagarMenu(){
+		encenderMenu = false;
 	}
 
 
@@ -108,13 +123,10 @@ public class PlayerScript : MonoBehaviour {
 
 	void OnMouseDown(){
 
-
-	
 				GameControllerScript.Instance.seleccionarJugador (this.gameObject);
+				encenderMenu = true;
 
 	}
-	
-
 
 	public Vector2 getNumCelda(){
 		return numCelda;
@@ -139,7 +151,17 @@ public class PlayerScript : MonoBehaviour {
 	public int getProbGolpe(){return this.probGolpe;}
 
 
-	
+
+	void OnGUI(){
+		if (encenderMenu) {
+				if(GUI.Button (new Rect (screenPosition.x - 20, screenPosition.y - 40, 20, 20), "A"))
+					cogerBola();
+				if(GUI.Button (new Rect (screenPosition.x, screenPosition.y - 40, 20, 20), "B"))
+					lanzarBola (new Vector2(0,0));
+				GUI.Button (new Rect (screenPosition.x + 20, screenPosition.y - 40, 20, 20), "C");
+		}
+	}
+
 }
 
 	
