@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
+
 
 public class PlayerScript : MonoBehaviour {
 
@@ -39,14 +41,12 @@ public class PlayerScript : MonoBehaviour {
 	private int golpe;
 	private int probGolpe;
 
-	
-
 	// Use this for initialization
 
 	void Start () {
 		target = transform.position;//A donde se va a mover
 		this.modoActivo = Modo.inactivo;//Al inicializar empieza sin hacer nada
-	
+
 	}
 	
 	// Update is called once per frame
@@ -114,7 +114,8 @@ public class PlayerScript : MonoBehaviour {
 				break;
 			case Modo.placaje: accionCompletada=placar(numCel);
 				break;
-			case Modo.inactivo: Debug.Log("No quiero hacer nada");//Si esta inactivo no necesita la casilla de destino
+			case Modo.inactivo: //Si esta inactivo no necesita la casilla de destino
+                MensajeScript.Instance.crearMensaje(this.getNombre(), "No quiero hacer nada");
 				break;
 
 		}
@@ -137,7 +138,7 @@ public class PlayerScript : MonoBehaviour {
         }
         else
         {
-            Debug.Log("Esa casilla esta muy lejos");
+            MensajeScript.Instance.crearMensaje(getNombre(), "Esa casillá está muy lejos!");
             return false;
 
         }
@@ -158,7 +159,10 @@ public class PlayerScript : MonoBehaviour {
             }
         }
         else
+        {
+            MensajeScript.Instance.crearMensaje(getNombre(), "No tengo la bola!");
             Debug.Log("No tengo la bola!");
+        }
 
         return false;
 
@@ -168,12 +172,19 @@ public class PlayerScript : MonoBehaviour {
 
 		PlayerScript p =TableroScript.Instance.getPlayerCelda (numCel);
 		if (p != null) {
-				p.quitarVida (this.golpe);
+            if (EstadisticasScript.placaje(this.getFuerza(), p.getFuerza()))
+            {
+                p.quitarVida(this.golpe);
                 if (p.tieneLaBola)
                     p.soltarBola();
-				alguienEnAccion = false;
-                return true;
+                MensajeScript.Instance.crearMensaje(getNombre(), "Placaje!");
+            }
+            else
+                MensajeScript.Instance.crearMensaje(getNombre(), "Fallo!");
+			alguienEnAccion = false;
+			return true;
 		} else {
+            MensajeScript.Instance.crearMensaje(getNombre(), "No le llego");
 			Debug.Log("No le llego");
             return false;
 		}
@@ -192,15 +203,21 @@ public class PlayerScript : MonoBehaviour {
 		if (numCeldaBola.x <= numCelda.x + 1 && numCeldaBola.x >= numCelda.x - 1 
 						&& numCeldaBola.y <= numCelda.y + 1 && numCeldaBola.y >= numCelda.y - 1) {
 						//Si el GameController le deja cojerla (si no la tiene otro)
-						if(GameControllerScript.Instance.bola.GetComponent<BolaScript> ().setPoseedor (this.gameObject)){
-							tieneLaBola = true;
-                            alguienEnAccion = false;
-                            GameControllerScript.Instance.accionTerminada();
-						}else 
-							Debug.Log("La tiene otro!");
+                if (GameControllerScript.Instance.bola.GetComponent<BolaScript>().setPoseedor(this.gameObject))
+                {
+                    tieneLaBola = true;
+                    alguienEnAccion = false;
+                    MensajeScript.Instance.crearMensaje(getNombre(), "Mia!");
+                    GameControllerScript.Instance.accionTerminada();
+                }
+                else
+                {
+                    Debug.Log("La tiene otro!");
+                    MensajeScript.Instance.crearMensaje(getNombre(), "La tiene otro!");
+                }
 
 		} else
-				Debug.Log ("Ta muy lejos!");
+            MensajeScript.Instance.crearMensaje(getNombre(), "Está muy lejos!");
 
         
 	}
@@ -212,6 +229,21 @@ public class PlayerScript : MonoBehaviour {
 
     }
 
+    public void atraparPase()
+    {
+        if (EstadisticasScript.recepcion(recepcion))
+        {
+            if (GameControllerScript.Instance.bola.GetComponent<BolaScript>().setPoseedor(this.gameObject))
+            {
+                MensajeScript.Instance.crearMensaje(getNombre(), "Mía!");
+                tieneLaBola = true;
+                alguienEnAccion = false;
+            }
+            else
+                MensajeScript.Instance.crearMensaje(getNombre(), "No puedo cogerla!");
+        }
+       
+    }
 
 
 	//El GameController le comunica al jugador que esta seleccionado para que encienda el menu
@@ -237,6 +269,19 @@ public class PlayerScript : MonoBehaviour {
 
 	}
 
+
+    void OnTriggerEnter2D(Collider2D col)
+    {
+		if (col.gameObject.tag == "Bola")//Capturar la bola cuando contacta con ella
+        {
+            BolaScript b = col.gameObject.GetComponent<BolaScript>();
+            if (b.estaEnMovimiento() && b.getUltimoPoseedorLocal()==!local)
+            {
+                atraparPase();
+            }
+        }
+    }
+
     public void setNumCeldaInicial(Vector2 nCelda)
     {
 
@@ -250,6 +295,10 @@ public class PlayerScript : MonoBehaviour {
         this.transform.position = TableroScript.Instance.getPosCelda(numCeldaInicial);
     }
 
+
+
+
+
 	public Vector2 getNumCelda(){
 		return numCelda;
 	}
@@ -259,8 +308,6 @@ public class PlayerScript : MonoBehaviour {
 		numCelda = celda;
         TableroScript.Instance.posicionarJudador(this.GetComponent<PlayerScript>());
 	}
-
-
 
 	//Getters de estadisticas de jugador
 	public string getNombre(){return this.nombre;}
@@ -275,6 +322,7 @@ public class PlayerScript : MonoBehaviour {
 	public int getIntercepcion(){return this.intercepcion;}
 	public int getGolpe(){return this.golpe;}
 	public int getProbGolpe(){return this.probGolpe;}
+    public bool isLocal() { return this.local; }
 
 
 	//Inicializar las estadisticas del jugador
@@ -339,6 +387,24 @@ public class PlayerScript : MonoBehaviour {
 
 }
 
+[Serializable]
+class PlayerData
+{
+    public string nombre;
+    public int vidaTotal = 10;
+    public int vida;
+    public int velocidad;
+    public int fuerza;
+    public int lpase;
+    public int recepcion;
+    public int dribbling;
+    public int agilidadDefensa;
+    public int intercepcion;
+    public int golpe;
+    public int probGolpe;
+
+
+}
 	
 
 

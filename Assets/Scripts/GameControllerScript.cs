@@ -11,10 +11,10 @@ public class GameControllerScript : MonoBehaviour {
     private static string EQUIPO_LOCAL_FILE = "equipoLocal.txt";
     private static string EQUIPO_VISITANTE_FILE = "equipoVisitante.txt";
     private static int turnosPorEquipo = 4;
+    private static int golesParaGanar = 3;
 
     private int turnosActuales;
     private bool turnoLocal=true;
-
 
 	private int golesL=0;
 	private int golesV=0;
@@ -27,21 +27,19 @@ public class GameControllerScript : MonoBehaviour {
 	//Bola
 	public GameObject bola;
 
-	//Jugadores Locales
+	//Jugadores Locales y visitantes
 	private GameObject[] locales= new GameObject[numJugadoresLocales];
     private GameObject[] visitantes = new GameObject[numJugadoresVisitantes];
 
-	//Jugadores Visitantes
-
-
-
+  
 	void Awake(){
 
 		if (Instance != null)
 						Debug.LogError ("No deberia de haber un GameController");
 				else
 						Instance = this;
-
+        
+        
 	}
 
 
@@ -59,11 +57,21 @@ public class GameControllerScript : MonoBehaviour {
 		inicializarBola ();
 
         turnosActuales = turnosPorEquipo;
+
+        MensajeScript.Instance.setMarcador("loc",0,"vis",0);
+        MensajeScript.Instance.gastarTurno(turnoLocal,turnosPorEquipo);
+
 	}
 	
 	// Update is called once per frame
 	void Update () {
-	
+
+        //TEMPORAL PARA PASAR TURNO!!
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            turnoLocal = !turnoLocal;
+            MensajeScript.Instance.gastarTurno(turnoLocal,turnosPorEquipo);
+        }
 	
 	}
 
@@ -128,9 +136,9 @@ public class GameControllerScript : MonoBehaviour {
 
         Color color =Color.white;
         if (local)
-            color = Color.white;
+            color = Color.green;
         else
-            color = Color.blue;
+            color = Color.red;
         
         p.GetComponent<PlayerScript>().setEquipo(local, color);
 		p.transform.position =TableroScript.Instance.getPosCelda(numCelda);
@@ -148,14 +156,6 @@ public class GameControllerScript : MonoBehaviour {
 		return golesV;
 	}
 
-	public void golLocal(){
-
-		golesL += 1;
-	}
-	public void golVisitante(){
-		
-		golesV += 1;
-	}
 
 	//Lo llama el jugador cuando se hace click en él
 	public void seleccionarJugador(PlayerScript player, bool local){
@@ -195,21 +195,38 @@ public class GameControllerScript : MonoBehaviour {
         {
             golesL += 1;
             turnoLocal = false;
+            MensajeScript.Instance.golLocal();
         }
         else
         {
             golesV += 1;
             turnoLocal = true;
+            MensajeScript.Instance.golVisitante();
         }
-        turnosActuales = turnosPorEquipo;
-        StartCoroutine(saqueDeCentro());
+
+        if (golesL >= golesParaGanar)
+        {
+            MensajeScript.Instance.crearMensaje("GANA EQUIPO LOCAL");
+        }
+        else if (golesV >= golesParaGanar)
+        {
+            MensajeScript.Instance.crearMensaje("GANA EQUIPO VISITANTE");
+        }
+        else
+        {
+            turnosActuales = turnosPorEquipo;
+            MensajeScript.Instance.gastarTurno(turnoLocal, turnosActuales);
+            StartCoroutine(saqueDeCentro());
+        }
+
+
         
     }
 
     IEnumerator saqueDeCentro()
     {
         Vector2 centro = TableroScript.Instance.getCentroTablero();
-        yield return new WaitForSeconds(2.0f);
+        yield return new WaitForSeconds(3.0f);
         foreach (GameObject p in locales)
         {
             p.GetComponent<PlayerScript>().volverAPosInicial();
@@ -218,8 +235,9 @@ public class GameControllerScript : MonoBehaviour {
         {
             p.GetComponent<PlayerScript>().volverAPosInicial();
         }
-        this.bola.GetComponent<BolaScript>().desplazar(TableroScript.Instance.getPosCelda(centro),
-            centro);
+        this.bola.GetComponent<BolaScript>().posicionarEnCelda(centro);
+        //this.bola.GetComponent<BolaScript>().desplazar(TableroScript.Instance.getPosCelda(centro), centro);
+        MensajeScript.Instance.crearMensaje("Saque de centro");
     }
 
 
@@ -232,7 +250,7 @@ public class GameControllerScript : MonoBehaviour {
 						pSeleccionado.GetComponent<PlayerScript>().desseleccionado();
 						return true;
 		} else {
-				Debug.Log ("No puede desplazar tan lejos");
+                MensajeScript.Instance.crearMensaje(transform.position, "No puedo desplazar tan lejos!");
 				return false;
 		}
 	}
@@ -248,10 +266,12 @@ public class GameControllerScript : MonoBehaviour {
     public void gastarTurno()
     {
         turnosActuales -= 1;
+        MensajeScript.Instance.gastarTurno(turnoLocal,turnosActuales);
         if (turnosActuales == 0)
         {
             turnoLocal = !turnoLocal;
             turnosActuales = turnosPorEquipo;
+            MensajeScript.Instance.gastarTurno(turnoLocal,turnosActuales);
         }
 
     }
@@ -263,21 +283,13 @@ public class GameControllerScript : MonoBehaviour {
 		//Mostrar las estadisticas del jugador seleccionado en pantalla
 		if (pSeleccionado != null) {
 			
-			GUI.Label (new Rect (200, 100, 400, 20), pSeleccionado.GetComponent<PlayerScript>().getNombre()+
-			           "   Vida: "+pSeleccionado.GetComponent<PlayerScript>().getVida().ToString()+"/"+
-			           pSeleccionado.GetComponent<PlayerScript>().getVidaTotal().ToString()+
-			           "   Vel: "+pSeleccionado.GetComponent<PlayerScript>().getVelocidad().ToString());
+			GUI.Label (new Rect (200, 100, 400, 20), pSeleccionado.getNombre()+
+			           "   Vida: "+pSeleccionado.getVida().ToString()+"/"+
+			           pSeleccionado.getVidaTotal().ToString()+
+			           "   Vel: "+pSeleccionado.getVelocidad().ToString()+
+			           "   Fuerza: "+pSeleccionado.getFuerza().ToString());
 
 		}
-
-        GUI.Label (new Rect(0,0,400,20), "Local "+golesL+"-"+golesV+" Visitante");
-
-        if(turnoLocal)
-            GUI.Label(new Rect(200, 0, 400, 20), "Turno LOCAL turnos Restantes " + turnosActuales);
-        else
-            GUI.Label(new Rect(200, 0, 400, 20), "Turno VISIT. turnos Restantes " + turnosActuales);
-
-
 
 
 	}

@@ -78,7 +78,7 @@ public class TableroScript : MonoBehaviour {
 		if (dist == 1) {
 						for (int i = -dist; i<=dist; i++) 
 								for (int j= -dist; j<=dist; j++) 
-										celdas [(int)pos.x + i, (int)pos.y + j].GetComponent<CeldaScript> ().encenderAmarillo ();
+										celdas [(int)pos.x + i, (int)pos.y + j].GetComponent<CeldaScript> ().encenderCelda ();
 
 		} else {
 
@@ -89,7 +89,7 @@ public class TableroScript : MonoBehaviour {
 								if ((Mathf.Abs (i) + Mathf.Abs (j) < (dist * 2 - ((int)(dist / 3)))) && Mathf.Abs (i) <= dist && Mathf.Abs (j) <= dist
 										&& (pos.x + i >= 0 && pos.y + j >= 0) && (pos.x + i < numCeldasY && pos.y + j < numCeldasX))
 
-										celdas [(int)pos.x + i, (int)pos.y + j].GetComponent<CeldaScript> ().encenderAmarillo ();
+										celdas [(int)pos.x + i, (int)pos.y + j].GetComponent<CeldaScript> ().encenderCelda ();
 
 			
 						}
