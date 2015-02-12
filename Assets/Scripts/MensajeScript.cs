@@ -109,7 +109,7 @@ public class MensajeScript : MonoBehaviour {
 
     }
 
-    public void gastarTurno(bool local, int turnos)
+    public void gastarTurno(bool local, int turnos, bool cambioTurno)
     {
         if (local)
             turno.text = "TURNO\n\n"+loc;
@@ -117,7 +117,8 @@ public class MensajeScript : MonoBehaviour {
             turno.text = "TURNO\n\n"+vis;
 
         turno.text += "\n\n" + turnos;
-        crearMensaje("Cambio de turno");
+        if(cambioTurno)
+         crearMensaje("Cambio de turno");
     }
 
 

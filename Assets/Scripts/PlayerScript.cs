@@ -387,24 +387,7 @@ public class PlayerScript : MonoBehaviour {
 
 }
 
-[Serializable]
-class PlayerData
-{
-    public string nombre;
-    public int vidaTotal = 10;
-    public int vida;
-    public int velocidad;
-    public int fuerza;
-    public int lpase;
-    public int recepcion;
-    public int dribbling;
-    public int agilidadDefensa;
-    public int intercepcion;
-    public int golpe;
-    public int probGolpe;
 
-
-}
 	
 
 

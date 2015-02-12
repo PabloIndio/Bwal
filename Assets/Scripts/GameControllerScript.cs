@@ -49,20 +49,26 @@ public class GameControllerScript : MonoBehaviour {
 		TableroScript.Instance.inicializarTablero ();
 
         //Leer e inicializar equipo local
-		leerFicheroJugadores (EQUIPO_LOCAL_FILE,numJugadoresLocales,locales,true);
+		//leerFicheroJugadores (EQUIPO_LOCAL_FILE,numJugadoresLocales,locales,true);
 
         //Leer e inicializar equipo visitante
-        leerFicheroJugadores(EQUIPO_VISITANTE_FILE, numJugadoresVisitantes, visitantes,false);
+        //leerFicheroJugadores(EQUIPO_VISITANTE_FILE, numJugadoresVisitantes, visitantes,false);
+
+        crearJugadores(Controller2.e1, true);
+        crearJugadores(Controller2.e2, false);
+
 
 		inicializarBola ();
 
         turnosActuales = turnosPorEquipo;
 
-        MensajeScript.Instance.setMarcador("loc",0,"vis",0);
-        MensajeScript.Instance.gastarTurno(turnoLocal,turnosPorEquipo);
+        MensajeScript.Instance.setMarcador(Controller2.e1.nombreEquipo,0,Controller2.e2.nombreEquipo,0);
+        MensajeScript.Instance.gastarTurno(turnoLocal,turnosPorEquipo,false);
 
 	}
-	
+
+
+    
 	// Update is called once per frame
 	void Update () {
 
@@ -70,10 +76,23 @@ public class GameControllerScript : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.P))
         {
             turnoLocal = !turnoLocal;
-            MensajeScript.Instance.gastarTurno(turnoLocal,turnosPorEquipo);
+            MensajeScript.Instance.gastarTurno(turnoLocal,turnosPorEquipo,true);
         }
-	
+	    const int orthographicSizeMin = 3; const int orthographicSizeMax = 24;
+
+        if (Input.GetAxis("Mouse ScrollWheel") > 0) 
+        {
+            Camera.main.orthographicSize--;
+        }
+        if (Input.GetAxis("Mouse ScrollWheel") < 0) 
+        {
+            Camera.main.orthographicSize++;
+        }
+ 
+    Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize, orthographicSizeMin, orthographicSizeMax );
+
 	}
+
 
 	private void inicializarBola(){
 
@@ -123,6 +142,44 @@ public class GameControllerScript : MonoBehaviour {
 
 	}
 
+    public void crearJugadores(EquipoScript e, bool local)
+    {
+
+        PlayerData[] players = e.jugadores;
+      
+        for (int i = 0; i < EquipoScript.numJugadores; i++)
+        {
+            GameObject p = (GameObject)Instantiate(Resources.Load("Player"), Vector3.zero, Quaternion.identity);
+            p.GetComponent<PlayerScript>().setParametros(players[i].nombre, players[i].vidaTotal, players[i].velocidad, players[i].fuerza,
+                                                           players[i].lpase, players[i].recepcion, players[i].dribbling, players[i].agilidadDefensa
+                                                           , players[i].intercepcion, players[i].golpe, players[i].probGolpe);
+            Vector2 v = e.posiciones[i];
+            if (!local)
+                v.x += 15;
+
+            p.GetComponent<PlayerScript>().setNumCeldaInicial(v);
+            p.GetComponent<PlayerScript>().setNumCelda(v);
+
+            Color color = Color.white;
+            if (local)
+                color = Color.green;
+            else
+                color = Color.red;
+
+            p.GetComponent<PlayerScript>().setEquipo(local, color);
+            p.transform.position = TableroScript.Instance.getPosCelda(v);
+
+            //Es necesario guararlo en el array de jugadores del GameController
+            if (local)
+                locales[i] = p;
+            else
+                visitantes[i] = p;
+
+        }
+
+    
+    }
+	
 
 	private GameObject inicializarJugador(GameObject p, string[] par,Vector2 numCelda, bool local){
 
@@ -215,7 +272,7 @@ public class GameControllerScript : MonoBehaviour {
         else
         {
             turnosActuales = turnosPorEquipo;
-            MensajeScript.Instance.gastarTurno(turnoLocal, turnosActuales);
+            MensajeScript.Instance.gastarTurno(turnoLocal, turnosActuales,false);
             StartCoroutine(saqueDeCentro());
         }
 
@@ -266,13 +323,14 @@ public class GameControllerScript : MonoBehaviour {
     public void gastarTurno()
     {
         turnosActuales -= 1;
-        MensajeScript.Instance.gastarTurno(turnoLocal,turnosActuales);
+        
         if (turnosActuales == 0)
         {
             turnoLocal = !turnoLocal;
             turnosActuales = turnosPorEquipo;
-            MensajeScript.Instance.gastarTurno(turnoLocal,turnosActuales);
-        }
+            MensajeScript.Instance.gastarTurno(turnoLocal,turnosActuales,true);
+        }else
+            MensajeScript.Instance.gastarTurno(turnoLocal, turnosActuales,false);
 
     }
 

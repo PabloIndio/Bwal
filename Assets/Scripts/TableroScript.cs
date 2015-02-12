@@ -16,8 +16,6 @@ public class TableroScript : MonoBehaviour {
 	public Transform celda;
 
 
-	//Numero de celda seleccionada
-	private Vector2 celdaDestino;
 	
 	void Awake(){
 		
@@ -114,7 +112,6 @@ public class TableroScript : MonoBehaviour {
 	}
 
 	public void setCeldaDestino(Vector2 numCel){
-		celdaDestino = numCel;
 		GameControllerScript.Instance.accionJugador (numCel);
 	}
 

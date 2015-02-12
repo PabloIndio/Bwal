@@ -10,21 +10,23 @@ public class EstadisticasScript {
         int ran=Random.Range(0, probTotal);
         if (ran<=intercepcion)
         {
-            MensajeScript.Instance.crearMensaje("Random fue " + ran + " que es menor o igual que " + intercepcion);
+            MensajeScript.Instance.crearMensaje("Salió " + ran + " <= intercepción(" + intercepcion+"). Atrapa la bola");
             return true;
         }else{
-            MensajeScript.Instance.crearMensaje("Random fue " + ran + " que es mayor que " + intercepcion);
+            MensajeScript.Instance.crearMensaje("Salió " + ran + " >= intercepción(" + intercepcion + "). No atrapa");
             return false;
         }
     }
 
 	public static bool placaje(int fuerzaAtaque, int fuerzaDefensa){
 
-
+        //Al hacer un placaje, el Random + la cuarta parte de la defensa del rival tiene que ser menor que la fuerza del atacante
 		int modif=fuerzaDefensa/4;
 		int ran = Random.Range(0,probTotal);
-		MensajeScript.Instance.crearMensaje("ran= "+ran+" fAtk= "+fuerzaAtaque+" fDef/4= "+fuerzaDefensa/4);
-		if(ran+modif<=fuerzaAtaque){
+        int total = ran+modif;
+        MensajeScript.Instance.crearMensaje("La fAtaque tiene que ser mayor que Ran+fDefensa/4..");
+		MensajeScript.Instance.crearMensaje("Random+fDefensa/4= "+total+"("+ran+"+"+modif+") y fAtaque: "+fuerzaAtaque);
+		if(total<=fuerzaAtaque){
 			MensajeScript.Instance.crearMensaje("Exito ataque");
 			return true;
 		}else{
